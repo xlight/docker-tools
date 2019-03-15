@@ -11,7 +11,12 @@
 
 .PHONY: sops gen_sops_gpg
 
-sops: /usr/local/bin/sops
+GPG  = /usr/bin/gpg
+SOPS = /usr/local/bin/sops
+
+ifeq ($(shell uname -s),Darwin)
+   GPG = /usr/local/bin/gpg
+endif
 
 /usr/local/bin/sops:
 ifeq ($(shell uname -s),Darwin)
@@ -24,9 +29,15 @@ else
 	@rm /tmp/sops.deb
 endif
 
-gen_sops_gpg:
+/usr/local/bin/gpg:
+ifeq ($(shell uname -s),Darwin)
+	brew install gpg
+endif
+
+sops: $(SOPS)
+gen_sops_gpg: $(GPG)
 	$(eval EXISTS := $(shell gpg --list-keys | grep "PGP credentials"))
-ifneq ($(EXISTS),)
+ifneq ($(EXISTS),1)
 	@echo Creating GPG private/public key for encryption
 	@echo "  Answer questions as follows:"
 	@echo "  kind?       1"
@@ -53,6 +64,7 @@ endif
 	@echo Creating file $@
 	echo creation_rules: > $@
 	echo "  - pgp: $(GPG_FINGERPRINT)" >> $@
+	gpg --export-secret-keys >~/.gnupg/secring.gpg
 
 SECRETS = $(basename $(wildcard secrets/*.yml))
 secrets: $(SECRETS)
