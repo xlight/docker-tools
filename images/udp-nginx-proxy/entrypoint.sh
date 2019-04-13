@@ -29,6 +29,12 @@ EOF
   cat <<EOF >> $CONF
   }
   server {
+    listen $LISTEN ;
+    proxy_pass backends;
+    proxy_responses 1;
+    error_log stderr;
+  }  
+  server {
     listen $LISTEN udp;
     proxy_pass backends;
     proxy_responses 1;
